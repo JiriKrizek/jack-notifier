@@ -1,0 +1,39 @@
+#! /bin/bash
+#
+# jack-notify
+#
+# jack-notify: 345 85 15
+# description: Mute/unmute sound after unplugging jack
+#
+### BEGIN INIT INFO
+# Provides: jack-notify
+# Required-Start: $local_fs
+# Default-Start: 3 4 5
+# Default-Stop: 0 6
+# chkconfig: 345 85 15
+# Description: Supports the mute/unmute after unplug jack
+### END INIT INFO
+
+
+if [[ "$UID" -ne "$ROOT_UID" ]]; then
+  echo "Must be executed as root"
+  exit 1;
+fi
+
+# See how we were called.
+case "$1" in
+  start)
+    OLDPWD=$PWD
+    cd /home/jedjisch/dev/jack-notify
+    nohup ./notify-init > /dev/null 2>&1 &
+    PWD=$OLDPWD
+    ;;
+  stop)
+    pkill notify-init
+    ;;
+  *)
+    echo "Usage: /etc/init.d/jack-notify {start|stop}"
+    exit 1
+    ;;
+esac
+exit 0
