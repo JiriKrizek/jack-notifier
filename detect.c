@@ -24,7 +24,7 @@ int read_volume() {
   fp = popen("/usr/bin/amixer sget Master | grep % | grep Left | cut -f 2 -d '[' | tr -d 'g/%]//'", "r");
     if (fp == NULL) {
       perror("Failed to run command\n" );
-      exit AMIXER_FAIL;
+      exit(AMIXER_FAIL);
   }
 
   /* Read the output a line at a time - output it. */
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
   if ((fd = open(dev, O_RDONLY)) < 0) {
       perror("evdev open");
-      exit EVDEV_FAIL;
+      exit(EVDEV_FAIL);
   }
 
   if(ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) {
