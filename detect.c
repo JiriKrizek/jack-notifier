@@ -18,8 +18,8 @@ int read_volume() {
 
     fp = popen("/usr/bin/amixer sget Master | grep % | grep Left | cut -f 2 -d '[' | tr -d 'g/%]//'", "r");
       if (fp == NULL) {
-        printf("Failed to run command\n" );
-        exit;
+        perror("Failed to run command\n" );
+        exit 2;
       }
 
       /* Read the output a line at a time - output it. */
