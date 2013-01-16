@@ -5,8 +5,12 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
+#define JACK_EVENT_TYPE 5
+#define JACK_EVENT_CODE 2
+
+#define DEBUG 0
+
 int read_volume() {
-    printf("read_vol_start");
     FILE *fp;
     int status;
     char path[1035];
@@ -25,18 +29,20 @@ int read_volume() {
 
       /* close */
       pclose(fp);
-      printf("read_vol_return");
       return volume;
 }
 
 int main(int argc, char* argv[])
 {
     int fd = -1;
-    char name[256]= "Unknown";
+    char name[256] = "Unknown";
     struct input_event event;
-    int volume=100;
+    int volume = read_volume();
+    //char *dev = argv[1];
+    char *dev = "/dev/input/event10";
 
-    if ((fd = open(argv[1], O_RDONLY)) < 0) {
+
+    if ((fd = open(dev, O_RDONLY)) < 0) {
         perror("evdev open");
         exit(1);
     }
@@ -49,24 +55,32 @@ int main(int argc, char* argv[])
 //            argv[1], name);
     while (1) {
         read(fd, &event, sizeof(struct input_event));
-        //printf("Event type is %d\n", event.type);
-        //printf("Event code is %d\n", event.code);
-        //printf("Event value is %d\n", event.value);
-        if (event.value == 1) {
-            printf("Connected");
 
-            //printf("volume: %d", volume);
+        if (DEBUG) {
+            printf("Event type is %d\n", event.type);
+            printf("Event code is %d\n", event.code);
+            printf("Event value is %d\n", event.value);
+        }
 
-            char str[512];
-            memset(str, '\0', sizeof(512));
-            sprintf(str, "amixer set Master %d", volume);
-            printf("====== string:");
-            //printf(str);
-            system(str);
-        } else if (event.value == 0) {
-            printf("Disconnected");
-            volume=read_volume();
-            system("amixer set Master 0");
+        // Event type and code is defined above (differs for different hardware)
+        if (event.type == JACK_EVENT_TYPE && event.code == JACK_EVENT_CODE) {
+            if (event.value == 1) {
+                char str[512];
+                memset(str, '\0', sizeof(512));
+                sprintf(str, "./setvol.sh %d", volume);
+
+                // Restore volume
+                system(str);
+            } else if (event.value == 0) {
+                if (DEBUG) {
+                    printf("Disconnected\n");
+                }
+
+                // Save current volume
+                volume = read_volume();
+                // Mute
+                system("./setvol.sh 0");
+            }
         }
     }
     close(fd);
